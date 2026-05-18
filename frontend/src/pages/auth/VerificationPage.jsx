@@ -19,8 +19,8 @@ const VerificationPage = () => {
       await sendOTP({ email, role });
       setStep(2);
     } catch (err) {
-      console.log("error is",err)
-      setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
+      console.log("error is",err.response.data.email.email)
+      setError(err.response?.data.email.email || 'Failed to send OTP. Please try again.');
     } finally {
       setLoading(false);
     }

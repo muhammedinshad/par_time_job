@@ -6,6 +6,10 @@ class SendOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
     role         = serializers.ChoiceField(choices=['employer', 'job_seeker'])
     
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError({'email': 'email already exist'})
+        return value
     
 class VerifyOTPSerializer(serializers.Serializer):
     email        = serializers.EmailField()

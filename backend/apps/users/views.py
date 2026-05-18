@@ -9,7 +9,8 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
 from .utils import generate_and_store_otp, verify_otp,get_tokens
-from allauth.socialaccount.models import SocialAccount
+from allauth.socialaccount.models import SocialAccount,SocialLogin
+from allauth.socialaccount.helpers import complete_social_login
 from django.shortcuts import redirect as django_redirect
 from urllib.parse import urlencode
 from urllib.parse import urlencode
@@ -48,6 +49,7 @@ class SendOTPView(APIView):
     def post(self, request):
         try:
             serializer = SendOTPSerializer(data=request.data)
+            
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -469,23 +471,35 @@ class ProfileUpdateView(APIView):
 #------ Google auth -------
 
 
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 class GoogleCallbackView(APIView):
     permission_classes = []
     authentication_classes = []
 
     def get(self, request):
         try:
-            user = request.user
-
-            if not user.is_authenticated:
-                return django_redirect(
-                    'http://localhost:5174/login?error=google_auth_failed'
-                )
-
-            # JWT tokens generate
+            # ✅ Session-il ninnu email edukuka
+            email = request.session.get('google_authenticated_email')
+            
+            if not email:
+                print("DEBUG: No email in session")
+                print("DEBUG: Session keys:", list(request.session.keys()))
+                return django_redirect('http://localhost:5174/login?error=session_missing')
+            
+            # ✅ DB-il ninnu user edukuka
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return django_redirect('http://localhost:5174/login?error=user_not_found')
+            
+            # ✅ Session clear cheyyuka (security)
+            del request.session['google_authenticated_email']
+            
             tokens = get_tokens(user)
 
-            # Profile complete check
             if user.role == 'employer':
                 profile_complete = EmployerProfile.objects.filter(user=user).exists()
             elif user.role == 'job_seeker':
@@ -495,39 +509,22 @@ class GoogleCallbackView(APIView):
 
             suggested_name = request.session.get('google_full_name', '')
 
-            # Params build
             params = urlencode({
                 'email':            user.email,
                 'role':             user.role or '',
                 'profile_complete': str(profile_complete).lower(),
                 'suggested_name':   suggested_name,
-                'access_token':     tokens['access'],   
-                'refresh_token':    tokens['refresh'],  
+                'access_token':     tokens['access'],
+                'refresh_token':    tokens['refresh'],
             })
 
-            # Redirect to React with params
-            response = django_redirect(
-                f'http://localhost:5174/google/callback?{params}'
-            )
-
-            # JWT cookies set on the response — browser stores & sends to localhost:8000
-            response.set_cookie(
-                key='access_token', value=tokens['access'],
-                httponly=True, secure=False,
-                samesite='Lax', max_age=60 * 60
-            )
-            response.set_cookie(
-                key='refresh_token', value=tokens['refresh'],
-                httponly=True, secure=False,
-                samesite='Lax', max_age=60 * 60 * 24 * 7
-            )
-            return response
+            return django_redirect(f'http://localhost:5174/google/callback?{params}')
 
         except Exception as e:
-            return django_redirect(
-                f'http://localhost:5174/login?error={str(e)}'
-            )
-
+            print("GoogleCallbackView ERROR:", str(e))
+            return django_redirect(f'http://localhost:5174/login?error={str(e)}')
+        
+        
 class GoogleCompleteProfileView(APIView):
     """
     Saves the role and profile details after a Google login.

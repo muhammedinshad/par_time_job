@@ -154,22 +154,3 @@ LOGIN_REDIRECT_URL = '/api/auth/google/callback/'
 
 SOCIALACCOUNT_ADAPTER = 'apps.users.adapters.CustomGoogleAdapter'
 
-# ─── Google OAuth credentials ────────────────────────────────────────────────
-# These are read from .env so the client secret is never hard-coded.
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id':     config('GOOGLE_CLIENT_ID'),
-            'secret':        config('GOOGLE_CLIENT_SECRET'),
-            'key':           '',
-        },
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-        'FETCH_USERINFO': True,
-    }
-}
