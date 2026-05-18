@@ -475,31 +475,24 @@ class ProfileUpdateView(APIView):
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+from rest_framework.authentication import SessionAuthentication
+
 class GoogleCallbackView(APIView):
     permission_classes = []
-    authentication_classes = []
+    # SessionAuthentication is CRITICAL here so DRF can read the user session allauth just created
+    authentication_classes = [SessionAuthentication]
 
     def get(self, request):
         try:
-            # ✅ Session-il ninnu email edukuka
-            email = request.session.get('google_authenticated_email')
-            
-            if not email:
-                print("DEBUG: No email in session")
-                print("DEBUG: Session keys:", list(request.session.keys()))
-                return django_redirect('http://localhost:5174/login?error=session_missing')
-            
-            # ✅ DB-il ninnu user edukuka
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return django_redirect('http://localhost:5174/login?error=user_not_found')
-            
-            # ✅ Session clear cheyyuka (security)
-            del request.session['google_authenticated_email']
-            
+            user = request.user
+
+            if not user or not user.is_authenticated:
+                return django_redirect('http://localhost:5174/login?error=google_auth_failed')
+
+            # Generate JWT tokens for frontend
             tokens = get_tokens(user)
 
+            # Check profile completion
             if user.role == 'employer':
                 profile_complete = EmployerProfile.objects.filter(user=user).exists()
             elif user.role == 'job_seeker':
@@ -507,18 +500,33 @@ class GoogleCallbackView(APIView):
             else:
                 profile_complete = False
 
+            # Retrieve Google name if this is a new user (set by adapter)
             suggested_name = request.session.get('google_full_name', '')
 
+            # Pass params to the frontend callback handler
             params = urlencode({
-                'email':            user.email,
-                'role':             user.role or '',
+                'email': user.email,
+                'role': user.role or '',
                 'profile_complete': str(profile_complete).lower(),
-                'suggested_name':   suggested_name,
-                'access_token':     tokens['access'],
-                'refresh_token':    tokens['refresh'],
+                'suggested_name': suggested_name,
+                'access_token': tokens['access'],
+                'refresh_token': tokens['refresh'],
             })
 
-            return django_redirect(f'http://localhost:5174/google/callback?{params}')
+            # React redirect
+            response = django_redirect(f'http://localhost:5174/google/callback?{params}')
+
+            # Set tokens as HTTP-only cookies
+            response.set_cookie(
+                key='access_token', value=tokens['access'],
+                httponly=True, secure=False, samesite='Lax', max_age=60 * 60
+            )
+            response.set_cookie(
+                key='refresh_token', value=tokens['refresh'],
+                httponly=True, secure=False, samesite='Lax', max_age=60 * 60 * 24 * 7
+            )
+            
+            return response
 
         except Exception as e:
             print("GoogleCallbackView ERROR:", str(e))

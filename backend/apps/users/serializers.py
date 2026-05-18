@@ -8,7 +8,7 @@ class SendOTPSerializer(serializers.Serializer):
     
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError({'email': 'email already exist'})
+            raise serializers.ValidationError('Email already exists')
         return value
     
 class VerifyOTPSerializer(serializers.Serializer):

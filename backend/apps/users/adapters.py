@@ -9,11 +9,10 @@ class CustomGoogleAdapter(DefaultSocialAccountAdapter):
             user.role = ''
             user.is_verified = True
             user.save()
-
-        # ✅ NEW + EXISTING both-inum session-il email store cheyyuka
-        request.session['google_authenticated_email'] = user.email
-        google_data = sociallogin.account.extra_data
-        request.session['google_full_name'] = google_data.get('name', '')
-        request.session.modified = True
+            
+            # Store google name in session ONLY for new users to prefill the profile
+            google_data = sociallogin.account.extra_data
+            request.session['google_full_name'] = google_data.get('name', '')
+            request.session.modified = True
 
         return user
