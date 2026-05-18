@@ -1,0 +1,125 @@
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { registerJobSeeker } from '../../api/authApi';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../../store/authSlice';
+
+const JobSeekerRegister = () => {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const [formData, setFormData] = useState({
+    full_name: '',
+    phone_number: '',
+    email: state?.email || '',
+    date_of_birth: '',
+    gender: 'male',
+    current_location: '',
+    password: '',
+    confirm_password: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirm_password) {
+      setError('Passwords do not match');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const response = await registerJobSeeker(formData);
+      dispatch(setCredentials({
+        user: { email: response.email },
+        role: response.role,
+      }));
+      navigate('/jobseeker/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Registration failed. Please check your details.');
+      if (err.response?.data) {
+        const details = Object.entries(err.response.data)
+          .map(([key, val]) => `${key}: ${val}`)
+          .join(', ');
+        setError(`Error: ${details}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="register-page">
+      <h1>Job Seeker Registration</h1>
+      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</div>}
+      <form onSubmit={handleSubmit}>
+        <input 
+          name="full_name" 
+          placeholder="Full Name" 
+          onChange={handleChange} 
+          required 
+        />
+        <input 
+          name="phone_number" 
+          placeholder="Phone Number (10 digits)" 
+          onChange={handleChange} 
+          required 
+        />
+        <input 
+          name="email" 
+          type="email" 
+          value={formData.email} 
+          onChange={handleChange} 
+          placeholder="Email" 
+          required 
+          readOnly={!!state?.email}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Date of Birth</label>
+          <input 
+            name="date_of_birth" 
+            type="date" 
+            onChange={handleChange} 
+            required 
+          />
+        </div>
+        <select name="gender" onChange={handleChange} required>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+        <input 
+          name="current_location" 
+          placeholder="Current Location" 
+          onChange={handleChange} 
+          required 
+        />
+        <input 
+          name="password" 
+          type="password" 
+          placeholder="Password" 
+          onChange={handleChange} 
+          required 
+        />
+        <input 
+          name="confirm_password" 
+          type="password" 
+          placeholder="Confirm Password" 
+          onChange={handleChange} 
+          required 
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? 'Registering...' : 'Register as Job Seeker'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default JobSeekerRegister;
