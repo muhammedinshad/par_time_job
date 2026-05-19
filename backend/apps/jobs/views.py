@@ -1,24 +1,20 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from apps.common.permissions import IsEmployer
 from .models import Job
 from .serializer import JobSerializer
 
 
 class JobCreateView(APIView):
     """Employer creates a new job posting."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsEmployer]
 
     def post(self, request):
         try:
             # Role check = employer 
             print(f"request is : {request}")
-            if request.user.role != 'employer':
-                return Response(
-                    {'error': 'Only employers can post jobs.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+           
 
             # check Employer profile 
             try:
@@ -48,15 +44,10 @@ class JobCreateView(APIView):
 
 class JobListView(APIView):
     """Employers jobs list."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsEmployer]
 
     def get(self, request):
         try:
-            if request.user.role != 'employer':
-                return Response(
-                    {'error': 'Only employers can access this.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
 
             jobs = Job.objects.filter(
                 employer=request.user.employer_profile
@@ -74,7 +65,7 @@ class JobListView(APIView):
 
 class JobDetailView(APIView):
     """Employer — see job, edit, delete."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsEmployer]
 
     def get_object(self, pk, employer_profile):
         try:
@@ -84,11 +75,6 @@ class JobDetailView(APIView):
 
     def get(self, request, pk):
         try:
-            if request.user.role != 'employer':
-                return Response(
-                    {'error': 'Only employers can access this.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
 
             job = self.get_object(pk, request.user.employer_profile)
             if not job:
@@ -107,11 +93,6 @@ class JobDetailView(APIView):
 
     def patch(self, request, pk):
         try:
-            if request.user.role != 'employer':
-                return Response(
-                    {'error': 'Only employers can access this.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
 
             job = self.get_object(pk, request.user.employer_profile)
             if not job:
@@ -138,11 +119,6 @@ class JobDetailView(APIView):
 
     def delete(self, request, pk):
         try:
-            if request.user.role != 'employer':
-                return Response(
-                    {'error': 'Only employers can access this.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
 
             job = self.get_object(pk, request.user.employer_profile)
             if not job:

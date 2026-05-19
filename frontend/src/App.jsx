@@ -10,6 +10,10 @@ import LoginPage from './pages/auth/LoginPage';
 import EmployerRegister from './pages/auth/EmployerRegister';
 import JobSeekerRegister from './pages/auth/JobSeekerRegister';
 import EmployerDashboard from './pages/employer/EmployerDashboard';
+import MyJobs from './pages/employer/MyJobs';
+import PostJob from './pages/employer/PostJob';
+import Applicants from './pages/employer/Applicants';
+import SelectedJobSeekers from './pages/employer/SelectedJobSeekers';
 import JobSeekerDashboard from './pages/jobseeker/JobSeekerDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProfilePage from './pages/auth/ProfilePage';
@@ -40,6 +44,10 @@ function App() {
             {/* Employer Routes */}
             <Route element={<RoleRoute allowedRoles={['employer']} />}>
               <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+              <Route path="/employer/my-jobs" element={<MyJobs />} />
+              <Route path="/employer/post-job" element={<PostJob />} />
+              <Route path="/employer/applications" element={<Applicants />} />
+              <Route path="/employer/selected-job-seekers" element={<SelectedJobSeekers />} />
             </Route>
 
             {/* Job Seeker Routes */}

@@ -492,7 +492,6 @@ class GoogleCallbackView(APIView):
             # Generate JWT tokens for frontend
             tokens = get_tokens(user)
 
-            # Check profile completion
             if user.role == 'employer':
                 profile_complete = EmployerProfile.objects.filter(user=user).exists()
             elif user.role == 'job_seeker':
