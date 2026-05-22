@@ -50,7 +50,6 @@ const EmployerRegister = () => {
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please check your details.');
       if (err.response?.data) {
-        // Detailed validation errors
         const details = Object.entries(err.response.data)
           .map(([key, val]) => `${key}: ${val}`)
           .join(', ');
@@ -62,10 +61,10 @@ const EmployerRegister = () => {
   };
 
   return (
-    <div className="register-page">
-      <h1>Employer Registration</h1>
-      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</div>}
-      <form onSubmit={handleSubmit}>
+    <div>
+      <h1 className="text-center text-[#111827] mt-8 text-3xl font-bold">Employer Registration</h1>
+      {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl flex flex-col gap-6 max-w-[450px] mx-auto my-8 shadow-sm border border-[#e5e7eb]">
         <input
           name="business_name"
           placeholder="Business Name"

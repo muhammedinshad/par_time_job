@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
@@ -81,6 +82,12 @@ class JobSeekerProfile(models.Model):
     current_location = models.CharField(max_length=200)
     created_at       = models.DateTimeField(auto_now_add=True)
     phone_number = models.CharField(max_length=10, unique=True)
+    cv = models.FileField(
+        upload_to='cvs/',
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(['pdf', 'doc', 'docx'])]
+    )
 
     def __str__(self):
         return self.full_name

@@ -15,6 +15,7 @@ CATEGORY_CHOICES = [
     ('events',      'Events & Entertainment'),
     ('health_care', 'Health & Care'),
     ('education',   'Education & Tutoring'),
+    ('delivery', 'Delivery'),
     ('other',       'Other'),
 ]
 

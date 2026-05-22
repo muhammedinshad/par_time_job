@@ -1,227 +1,134 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import {
-  BriefcaseIcon,
-  DocumentTextIcon,
-  CheckBadgeIcon,
-  ClockIcon,
+  PlusIcon,
+  ArrowUpRightIcon,
+  ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from '../../components/common/Sidebar';
-import axiosInstance from '../../api/axiosInstance';
-
-const mockApplications = [
-  { id: 1, name: 'Sarah Johnson', email: 'sarah.j@email.com', job: 'Web Developer', status: 'pending', appliedAt: '2026-05-18' },
-  { id: 2, name: 'Michael Chen', email: 'm.chen@email.com', job: 'Graphic Designer', status: 'shortlisted', appliedAt: '2026-05-17' },
-  { id: 3, name: 'Emily Davis', email: 'emily.d@email.com', job: 'Web Developer', status: 'accepted', appliedAt: '2026-05-16' },
-  { id: 4, name: 'James Wilson', email: 'j.wilson@email.com', job: 'Content Writer', status: 'pending', appliedAt: '2026-05-15' },
-  { id: 5, name: 'Olivia Brown', email: 'olivia.b@email.com', job: 'Graphic Designer', status: 'rejected', appliedAt: '2026-05-14' },
-];
-
-const statusColors = {
-  pending: 'pending',
-  shortlisted: 'shortlisted',
-  accepted: 'accepted',
-  rejected: 'rejected',
-};
-
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-};
+import EmployerNavbar from './EmployerNavbar';
 
 const EmployerDashboard = () => {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  const fetchJobs = async () => {
-    try {
-      const response = await axiosInstance.get('/jobs/');
-      setJobs(response.data);
-    } catch (err) {
-      console.error('Failed to fetch jobs:', err);
-      setError('Could not load job data.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const totalJobs = jobs.length;
-  const activeJobs = jobs.filter((job) => job.is_active).length;
-  const totalApplications = mockApplications.length;
-  const selectedApplications = mockApplications.filter(
-    (app) => app.status === 'accepted' || app.status === 'shortlisted'
-  ).length;
-
-  const recentJobs = [...jobs]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 5);
-
-  const latestApplications = [...mockApplications]
-    .sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt))
-    .slice(0, 5);
-
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
   return (
-    <div className="dashboard-layout">
+    <div className="fixed inset-0 w-screen h-screen bg-[#f5f7f6] text-[#111827] font-sans flex z-[9999] overflow-hidden m-0 p-0">
       <Sidebar />
-      <main className="dashboard-main">
-        <div className="dashboard-header">
-          <div>
-            <h1>Dashboard</h1>
-            <p>Welcome back! Here's what's happening today.</p>
-          </div>
-          <span className="header-date">{today}</span>
-        </div>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-card-icon blue">
-              <BriefcaseIcon />
-            </div>
-            <div className="stat-info">
-              <span className="stat-value">{totalJobs}</span>
-              <span className="stat-label">Total Jobs</span>
-            </div>
-          </div>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col h-full overflow-y-auto">
+        <EmployerNavbar />
 
-          <div className="stat-card">
-            <div className="stat-card-icon green">
-              <DocumentTextIcon />
+        {/* Dashboard Content */}
+        <div className="px-10 pb-10 flex-1 max-w-[1400px]">
+          {/* Page Header */}
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h1 className="text-[32px] font-bold text-[#111827] tracking-tight mb-2">Dashboard</h1>
+              <p className="text-[15px] text-[#9ca3af] font-medium">Plan, prioritize, and accomplish your tasks with ease.</p>
             </div>
-            <div className="stat-info">
-              <span className="stat-value">{totalApplications}</span>
-              <span className="stat-label">Total Applications</span>
+            <div className="flex gap-4">
+              <button className="flex items-center gap-2 bg-[#176646] text-white px-6 py-3 rounded-full text-[15px] font-semibold hover:bg-[#0f4f34] transition-colors shadow-sm">
+                <PlusIcon className="w-5 h-5 stroke-2" /> Add Job
+              </button>
+              <button className="bg-transparent text-[#1f2937] px-6 py-3 rounded-full text-[15px] font-semibold border border-[#d1d5db] hover:bg-black/5 transition-colors">
+                Import Data
+              </button>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-card-icon yellow">
-              <ClockIcon />
+          {/* Stats Grid */}
+          <div className="grid grid-cols-4 gap-6 mb-6">
+            {/* Card 1 — Total Jobs Count (colored) */}
+            <div className="bg-gradient-to-br from-[#12583d] to-[#1d8258] text-white rounded-[24px] p-6 flex flex-col shadow-sm min-h-[190px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-[16px] font-semibold">Total Jobs Count</h3>
+                <button className="w-8 h-8 rounded-full flex items-center justify-center bg-white text-[#111827] hover:scale-105 transition-transform">
+                  <ArrowUpRightIcon className="w-4 h-4 stroke-2" />
+                </button>
+              </div>
+              <div className="text-[48px] font-bold tracking-tight mb-auto leading-none mt-2">24</div>
+              <div className="mt-4">
+                <span className="flex items-center gap-2 text-[13px] font-medium text-[#79d89a]">
+                  <span className="bg-[#1b734f] rounded-md px-1 py-0.5"><ArrowTrendingUpIcon className="w-3.5 h-3.5 text-[#79d89a]" /></span> Increased from last month
+                </span>
+              </div>
             </div>
-            <div className="stat-info">
-              <span className="stat-value">{activeJobs}</span>
-              <span className="stat-label">Active Jobs</span>
+
+            {/* Card 2 — Total Applications */}
+            <div className="bg-white text-[#111827] rounded-[24px] p-6 flex flex-col shadow-sm min-h-[190px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-[16px] font-semibold">Total Applications</h3>
+                <button className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-[#e5e7eb] text-[#111827] hover:scale-105 transition-transform hover:bg-gray-50">
+                  <ArrowUpRightIcon className="w-4 h-4 stroke-2" />
+                </button>
+              </div>
+              <div className="text-[48px] font-bold tracking-tight mb-auto leading-none mt-2">10</div>
+              <div className="mt-4">
+                <span className="flex items-center gap-2 text-[13px] font-medium text-[#1d8258]">
+                  <span className="border border-[#e5e7eb] rounded-md px-1 py-0.5"><ArrowTrendingUpIcon className="w-3.5 h-3.5 text-[#1d8258]" /></span> Increased from last month
+                </span>
+              </div>
+            </div>
+
+            {/* Card 3 — Active Jobs Count */}
+            <div className="bg-white text-[#111827] rounded-[24px] p-6 flex flex-col shadow-sm min-h-[190px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-[16px] font-semibold">Active Jobs Count</h3>
+                <button className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-[#e5e7eb] text-[#111827] hover:scale-105 transition-transform hover:bg-gray-50">
+                  <ArrowUpRightIcon className="w-4 h-4 stroke-2" />
+                </button>
+              </div>
+              <div className="text-[48px] font-bold tracking-tight mb-auto leading-none mt-2">12</div>
+              <div className="mt-4">
+                <span className="flex items-center gap-2 text-[13px] font-medium text-[#1d8258]">
+                  <span className="border border-[#e5e7eb] rounded-md px-1 py-0.5"><ArrowTrendingUpIcon className="w-3.5 h-3.5 text-[#1d8258]" /></span> Increased from last month
+                </span>
+              </div>
+            </div>
+
+            {/* Card 4 — Total Selected */}
+            <div className="bg-white text-[#111827] rounded-[24px] p-6 flex flex-col shadow-sm min-h-[190px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-[16px] font-semibold">Total Selected</h3>
+                <button className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-[#e5e7eb] text-[#111827] hover:scale-105 transition-transform hover:bg-gray-50">
+                  <ArrowUpRightIcon className="w-4 h-4 stroke-2" />
+                </button>
+              </div>
+              <div className="text-[48px] font-bold tracking-tight mb-auto leading-none mt-2">2</div>
+              <div className="mt-4">
+                <span className="text-[13px] font-medium text-[#9ca3af]">
+                  On Discuss
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-card-icon purple">
-              <CheckBadgeIcon />
+          {/* Bottom Grid */}
+          <div className="grid grid-cols-[1.5fr_1fr_1fr] gap-6">
+            {/* Recent Job Postings */}
+            <div className="bg-white rounded-[24px] p-6 min-h-[320px] shadow-sm">
+              <h3 className="text-[18px] font-bold text-[#111827] mb-6">Recent Job Postings</h3>
+              <div className="flex items-center justify-center h-[200px] text-[#9ca3af] bg-gray-50 rounded-[16px] border border-dashed border-gray-200">
+                <p className="text-[14px]">No recent job postings available.</p>
+              </div>
             </div>
-            <div className="stat-info">
-              <span className="stat-value">{selectedApplications}</span>
-              <span className="stat-label">Selected Applications</span>
+
+            {/* Latest Applications */}
+            <div className="bg-white rounded-[24px] p-6 min-h-[320px] shadow-sm flex flex-col">
+              <h3 className="text-[18px] font-bold text-[#111827] mb-6">Latest Applications</h3>
+              <div className="mt-auto">
+                <button className="w-full bg-[#136040] text-white rounded-[14px] py-4 font-semibold text-[15px] flex items-center justify-center gap-2 shadow-sm hover:bg-[#0f4f34]">
+                  Start Meeting
+                </button>
+              </div>
+            </div>
+
+            {/* Additional Card */}
+            <div className="bg-white rounded-[24px] p-6 min-h-[320px] shadow-sm">
+              <h3 className="text-[18px] font-bold text-[#111827] mb-6">Upcoming Interviews</h3>
+              <div className="flex items-center justify-center h-[200px] text-[#9ca3af] bg-gray-50 rounded-[16px] border border-dashed border-gray-200">
+                <p className="text-[14px]">No upcoming interviews.</p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2>Recent Job Postings</h2>
-            <Link to="/employer/my-jobs" className="section-link">View All</Link>
-          </div>
-
-          {loading ? (
-            <div className="loading-state">
-              <div className="spinner" />
-            </div>
-          ) : error ? (
-            <div className="empty-state"><p>{error}</p></div>
-          ) : recentJobs.length === 0 ? (
-            <div className="empty-state"><p>No jobs posted yet.</p></div>
-          ) : (
-            <div className="table-container">
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Job Title</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Status</th>
-                    <th>Posted</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentJobs.map((job) => (
-                    <tr key={job.id}>
-                      <td>
-                        <Link to={`/employer/my-jobs`} className="job-title-link">
-                          {job.title}
-                        </Link>
-                      </td>
-                      <td>{job.category}</td>
-                      <td>{job.location}</td>
-                      <td>
-                        <span className={`status-badge ${job.is_active ? 'accepted' : 'rejected'}`}>
-                          {job.is_active ? 'Active' : 'Closed'}
-                        </span>
-                      </td>
-                      <td>{formatDate(job.created_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2>Latest Applications</h2>
-            <Link to="/employer/applications" className="section-link">View All</Link>
-          </div>
-
-          {latestApplications.length === 0 ? (
-            <div className="empty-state"><p>No applications yet.</p></div>
-          ) : (
-            <div className="table-container">
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Applicant</th>
-                    <th>Job</th>
-                    <th>Status</th>
-                    <th>Applied</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latestApplications.map((app) => (
-                    <tr key={app.id}>
-                      <td>
-                        <div className="applicant-info">
-                          <div className="applicant-avatar">
-                            {app.name.split(' ').map((n) => n[0]).join('')}
-                          </div>
-                          <div className="applicant-details">
-                            <span className="applicant-name">{app.name}</span>
-                            <span className="applicant-email">{app.email}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{app.job}</td>
-                      <td>
-                        <span className={`status-badge ${statusColors[app.status]}`}>
-                          {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                        </span>
-                      </td>
-                      <td>{formatDate(app.appliedAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       </main>
     </div>

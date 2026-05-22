@@ -201,6 +201,7 @@ class JobSeekerProfileUpdateSerializer(serializers.ModelSerializer):
             'gender',
             'current_location',
             'phone_number',
+            'cv',
         ]
 
     def validate_phone_number(self, value):
@@ -214,6 +215,11 @@ class JobSeekerProfileUpdateSerializer(serializers.ModelSerializer):
         from datetime import date
         if value >= date.today():
             raise serializers.ValidationError('Date of birth must be in the past')
+        return value
+    
+    def validate_cv(self, value):
+        if value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError('CV must be under 5MB.')
         return value
     
 

@@ -11,6 +11,7 @@ from django.conf import settings
 from .utils import generate_and_store_otp, verify_otp,get_tokens
 from allauth.socialaccount.models import SocialAccount,SocialLogin
 from allauth.socialaccount.helpers import complete_social_login
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.shortcuts import redirect as django_redirect
 from urllib.parse import urlencode
 from urllib.parse import urlencode
@@ -418,6 +419,7 @@ class ResetPasswordView(APIView):
 
 class ProfileUpdateView(APIView):
     permission_classes = []
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def patch(self, request):
         try:

@@ -5,7 +5,7 @@ import { sendOTP, verifyOTP } from '../../api/authApi';
 
 const VerificationPage = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('job_seeker');
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,6 @@ const VerificationPage = () => {
     try {
       const response = await verifyOTP({ email, otp_code: otp });
       if (response.otp_verified) {
-        // Redirect to registration page with email and role in state
         const targetPath = role === 'employer' ? '/register/employer' : '/register/jobseeker';
         navigate(targetPath, { state: { email, role } });
       }
@@ -44,16 +43,16 @@ const VerificationPage = () => {
   };
 
   return (
-    <div className="verification-container">
-      {error && <div className="error-message" style={{ color: 'var(--danger)', textAlign: 'center', marginBottom: '1rem' }}>{error}</div>}
+    <div>
+      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
       
       {step === 1 ? (
-        <form onSubmit={handleSendOtp}>
-          <h2>Verify Your Email</h2>
-          <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1rem' }}>
+        <form onSubmit={handleSendOtp} className="bg-white p-8 rounded-2xl flex flex-col gap-6 max-w-[450px] mx-auto my-8 shadow-sm border border-[#e5e7eb]">
+          <h2 className="text-2xl font-bold text-[#111827] text-center">Verify Your Email</h2>
+          <p className="text-[#6b7280] text-center">
             We will send a 6-digit code to your email.
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="flex flex-col gap-4">
             <input 
               type="email" 
               placeholder="Enter your email" 
@@ -61,28 +60,28 @@ const VerificationPage = () => {
               onChange={(e) => setEmail(e.target.value)} 
               required 
             />
-            <select value={role} onChange={(e) => setRole(e.target.value)} style={{ padding: '0.8rem' }}>
-              <option value="job_seeker">I am looking for a job</option>
-              <option value="employer">I want to hire people</option>
+            <select value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="job_seeker" className="bg-white">I am looking for a job</option>
+              <option value="employer" className="bg-white">I want to hire people</option>
             </select>
             <button type="submit" disabled={loading}>
               {loading ? 'Sending...' : 'Send OTP'}
             </button>
-            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem' }}>
-              Already have an account? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Login here</Link>
+            <p className="text-center mt-4 text-sm text-[#6b7280]">
+              Already have an account? <Link to="/login" className="text-[#136040] font-bold">Login here</Link>
             </p>
           </div>
         </form>
       ) : (
-        <div className="otp-section" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: '1rem', maxWidth: '450px', margin: '2rem auto', textAlign: 'center' }}>
-          <h2>Enter Verification Code</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+        <div className="bg-white p-8 rounded-2xl max-w-[450px] mx-auto my-8 text-center shadow-sm border border-[#e5e7eb]">
+          <h2 className="text-2xl font-bold text-[#111827] mb-2">Enter Verification Code</h2>
+          <p className="text-[#6b7280] mb-8">
             A 6-digit code has been sent to <strong>{email}</strong>
           </p>
           <OtpInput length={6} onComplete={handleVerifyOtp} />
           <button 
             onClick={() => setStep(1)} 
-            style={{ background: 'transparent', border: 'none', color: 'var(--primary)', marginTop: '1.5rem', cursor: 'pointer', textDecoration: 'underline' }}
+            className="bg-transparent border-none text-[#136040] mt-6 cursor-pointer underline font-semibold"
           >
             Change Email
           </button>

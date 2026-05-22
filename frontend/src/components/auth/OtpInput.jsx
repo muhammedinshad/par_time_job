@@ -11,7 +11,6 @@ const OtpInput = ({ length = 6, onComplete }) => {
     newOtp[index] = element.value;
     setOtp(newOtp);
 
-    // Focus next input
     if (element.value !== "" && index < length - 1) {
       inputRefs.current[index + 1].focus();
     }
@@ -28,7 +27,7 @@ const OtpInput = ({ length = 6, onComplete }) => {
   };
 
   return (
-    <div className="otp-input-container">
+    <div className="flex gap-2 justify-center">
       {otp.map((data, index) => (
         <input
           key={index}
@@ -38,7 +37,7 @@ const OtpInput = ({ length = 6, onComplete }) => {
           ref={el => inputRefs.current[index] = el}
           onChange={e => handleChange(e.target, index)}
           onKeyDown={e => handleKeyDown(e, index)}
-          className="otp-field"
+          className="w-[45px] h-[55px] text-center text-2xl font-bold bg-white border border-[#e5e7eb] text-[#111827] rounded-lg outline-none focus:border-[#136040] focus:shadow-[0_0_0_3px_rgba(19,96,64,0.1)]"
         />
       ))}
     </div>

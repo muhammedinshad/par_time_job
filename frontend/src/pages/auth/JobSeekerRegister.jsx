@@ -55,10 +55,10 @@ const JobSeekerRegister = () => {
   };
 
   return (
-    <div className="register-page">
-      <h1>Job Seeker Registration</h1>
-      {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</div>}
-      <form onSubmit={handleSubmit}>
+    <div>
+      <h1 className="text-center text-[#111827] mt-8 text-3xl font-bold">Job Seeker Registration</h1>
+      {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl flex flex-col gap-6 max-w-[450px] mx-auto my-8 shadow-sm border border-[#e5e7eb]">
         <input 
           name="full_name" 
           placeholder="Full Name" 
@@ -80,8 +80,8 @@ const JobSeekerRegister = () => {
           required 
           readOnly={!!state?.email}
         />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Date of Birth</label>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-[#6b7280]">Date of Birth</label>
           <input 
             name="date_of_birth" 
             type="date" 

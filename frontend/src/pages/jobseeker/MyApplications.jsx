@@ -7,9 +7,9 @@ const MyApplications = () => {
   ];
 
   return (
-    <div className="my-applications">
-      <h1>My Applications</h1>
-      <div className="application-list">
+    <div>
+      <h1 className="text-3xl font-bold text-[#111827] mb-6">My Applications</h1>
+      <div className="flex flex-col gap-4">
         {applications.map(app => (
           <ApplicationCard key={app.id} application={app} />
         ))}

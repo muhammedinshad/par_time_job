@@ -23,7 +23,6 @@ const LoginPage = () => {
         role: response.role,
       }));
       
-      // Redirect based on role
       if (response.role === 'employer') {
         navigate('/employer/dashboard');
       } else if (response.role === 'job_seeker') {
@@ -41,10 +40,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-page">
-      <h1>Login</h1>
-      {error && <div style={{ color: 'var(--danger)', textAlign: 'center', marginBottom: '1rem' }}>{error}</div>}
-      <form onSubmit={handleSubmit}>
+    <div>
+      <h1 className="text-center text-[#111827] mt-8 text-3xl font-bold">Login</h1>
+      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl flex flex-col gap-6 max-w-[450px] mx-auto my-8 shadow-sm border border-[#e5e7eb]">
         <input 
           type="email" 
           placeholder="Email" 
@@ -63,21 +62,21 @@ const LoginPage = () => {
           {loading ? 'Logging in...' : 'Login'}
         </button>
 
-        <div className="divider">
+        <div className="flex items-center text-center my-2 text-[#6b7280] before:flex-1 before:border-b before:border-[#e5e7eb] after:flex-1 after:border-b after:border-[#e5e7eb] before:mr-4 after:ml-4">
           <span>OR</span>
         </div>
 
         <button 
           type="button" 
-          className="google-btn" 
+          className="bg-white text-[#111827] flex items-center justify-center gap-3 font-semibold border border-[#e5e7eb] hover:bg-gray-50 hover:-translate-y-0.5" 
           onClick={() => window.location.href = 'http://localhost:8000/api/auth/accounts/google/login/?process=login'}
         >
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
           Login with Google
         </button>
 
-        <p style={{ textAlign: 'center', marginTop: '1rem', color: 'var(--text-muted)' }}>
-          Don't have an account? <span onClick={() => navigate('/verify')} style={{ color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}>Register</span>
+        <p className="text-center mt-4 text-[#6b7280]">
+          Don't have an account? <span onClick={() => navigate('/verify')} className="text-[#136040] cursor-pointer underline">Register</span>
         </p>
       </form>
     </div>
