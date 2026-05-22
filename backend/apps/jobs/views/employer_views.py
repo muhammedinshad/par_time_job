@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from apps.common.permissions import IsEmployer
-from .models import Job
-from .serializer import JobSerializer
+from ..models import Job
+from ..serializer import JobSerializer
 
 
 class JobCreateView(APIView):
