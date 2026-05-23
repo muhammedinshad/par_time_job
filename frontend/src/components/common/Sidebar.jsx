@@ -10,6 +10,7 @@ import {
   UsersIcon,
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
+  UserIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import { Squares2X2Icon as Squares2X2Solid } from '@heroicons/react/24/solid';
@@ -26,6 +27,7 @@ const Sidebar = () => {
   ];
 
   const generalItems = [
+    { to: '/employer/profile', label: 'Profile', icon: UserIcon },
     { to: '/employer/settings', label: 'Settings', icon: Cog6ToothIcon },
     { to: '/employer/help', label: 'Help', icon: QuestionMarkCircleIcon },
   ];

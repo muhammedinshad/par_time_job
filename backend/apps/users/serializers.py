@@ -147,6 +147,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'current_location',
             'phone_number',
             'created_at',
+            "cv",
         ]
         
 

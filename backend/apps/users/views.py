@@ -430,7 +430,7 @@ class ProfileUpdateView(APIView):
                 serializer = EmployerProfileUpdateSerializer(
                     profile,
                     data=request.data,
-                    partial=True  # ✅ Partial — oro field um update cheyyam, full body venam
+                    partial=True 
                 )
 
             elif user.role == 'job_seeker':

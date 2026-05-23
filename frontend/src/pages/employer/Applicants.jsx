@@ -1,28 +1,31 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Sidebar from '../../components/common/Sidebar';
 import EmployerNavbar from './EmployerNavbar';
-
-const applicants = [
-  { id: 1, name: 'Sarah Johnson', email: 'sarah.j@email.com', job: 'Web Developer', status: 'pending', appliedDate: '2026-05-18' },
-  { id: 2, name: 'Michael Chen', email: 'm.chen@email.com', job: 'Graphic Designer', status: 'shortlisted', appliedDate: '2026-05-17' },
-  { id: 3, name: 'Emily Davis', email: 'emily.d@email.com', job: 'Web Developer', status: 'accepted', appliedDate: '2026-05-16' },
-  { id: 4, name: 'James Wilson', email: 'j.wilson@email.com', job: 'Content Writer', status: 'pending', appliedDate: '2026-05-15' },
-  { id: 5, name: 'Olivia Brown', email: 'olivia.b@email.com', job: 'Graphic Designer', status: 'rejected', appliedDate: '2026-05-14' },
-];
-
-const statusStyle = {
-  pending: 'bg-amber-50 text-amber-600',
-  shortlisted: 'bg-[#136040]/10 text-[#136040]',
-  accepted: 'bg-[#1d8258]/10 text-[#1d8258]',
-  rejected: 'bg-red-50 text-red-500',
-};
+import StatusBadge from '../../components/common/StatusBadge';
+import { fetchEmployerApplications } from '../../api/jobApi';
 
 const formatDate = (dateStr) => {
+  if (!dateStr) return '-';
   const date = new Date(dateStr);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 const Applicants = () => {
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchEmployerApplications()
+      .then((data) => {
+        const allApps = Array.isArray(data) ? data : [];
+        setApplications(allApps.filter((app) => app.status === 'pending'));
+      })
+      .catch(() => setError('Failed to load applications.'))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="fixed inset-0 w-screen h-screen bg-[#f5f7f6] text-[#111827] font-sans flex z-[9999] overflow-hidden m-0 p-0">
       <Sidebar />
@@ -36,40 +39,61 @@ const Applicants = () => {
             </div>
           </div>
 
-          {applicants.length === 0 ? (
-            <div className="text-center p-12 text-[#9ca3af]"><p>No applications received yet.</p></div>
+          {loading ? (
+            <div className="flex items-center justify-center p-16">
+              <div className="w-[50px] h-[50px] border-[5px] border-gray-200 border-t-[#136040] rounded-full animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="text-center p-12 text-red-500">
+              <p>{error}</p>
+              <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-[#136040] text-white rounded-xl text-sm">
+                Retry
+              </button>
+            </div>
+          ) : applications.length === 0 ? (
+            <div className="text-center p-12 text-[#9ca3af]">
+              <p>No applications received yet.</p>
+            </div>
           ) : (
             <div className="bg-white rounded-[24px] border border-[#e5e7eb] overflow-hidden shadow-sm">
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Applicant</th>
-                    <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Job</th>
+                    <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Job Title</th>
+                    <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Category</th>
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Status</th>
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Applied</th>
+                    <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {applicants.map((app) => (
+                  {applications.map((app) => (
                     <tr key={app.id} className="hover:bg-black/[0.02] transition-colors">
                       <td className="p-4 text-sm border-b border-[#e5e7eb]">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-[#136040] flex items-center justify-center font-bold text-sm text-white shrink-0">
-                            {app.name.split(' ').map((n) => n[0]).join('')}
+                            {app.seeker_name?.split(' ').map((n) => n[0]).join('') || '?'}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-medium text-sm text-[#111827]">{app.name}</span>
-                            <span className="text-xs text-[#9ca3af]">{app.email}</span>
+                            <span className="font-medium text-sm text-[#111827]">{app.seeker_name}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{app.job}</td>
+                      <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{app.job_title}</td>
+                      <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{app.job_category}</td>
                       <td className="p-4 text-sm border-b border-[#e5e7eb]">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[app.status]}`}>
-                          {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                        </span>
+                        <StatusBadge status={app.status} />
                       </td>
-                      <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{formatDate(app.appliedDate)}</td>
+                      <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{formatDate(app.applied_at)}</td>
+                      <td className="p-4 text-sm border-b border-[#e5e7eb]">
+                        <Link
+                          to={`/employer/applications/${app.id}`}
+                          className="inline-flex items-center px-3 py-1.5 bg-[#136040] text-white text-xs font-medium rounded-lg hover:bg-[#0f4f34] transition-colors no-underline"
+                        >
+                          View
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

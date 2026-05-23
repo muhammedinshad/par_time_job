@@ -5,17 +5,15 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // ✅ Cookie auto attach — token manually venam
+  withCredentials: true, // Cookie auto attach
 });
 
-// ❌ Request interceptor — localStorage token logic muzhuvan remove cheyyuka
-// Cookie automatic ayi പോകും, axios oru work cheyyanda
 
-// ✅ Response interceptor — 401 vannal auto refresh
-let isRefreshing = false; // Refresh already nadakkunundo check
-let failedQueue = [];     // Refresh nadakumbol wait cheyyunna requests
+// Response interceptor — auto refresh when 401
+let isRefreshing = false; 
+let failedQueue = [];     
 
-// Refresh kazhinjalum pending requests process cheyyuka
+// Process pending requests even after refresh.
 const processQueue = (error) => {
   failedQueue.forEach((prom) => {
     if (error) {

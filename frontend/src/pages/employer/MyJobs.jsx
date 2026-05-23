@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../../components/common/Sidebar';
 import EmployerNavbar from './EmployerNavbar';
@@ -9,19 +9,11 @@ const MyJobs = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJobs();
+    axiosInstance.get('jobs/')
+      .then((response) => setJobs(response.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
-
-  const fetchJobs = async () => {
-    try {
-      const response = await axiosInstance.get('/jobs/');
-      setJobs(response.data);
-    } catch (err) {
-      console.error('Failed to fetch jobs:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -61,13 +53,14 @@ const MyJobs = () => {
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Slots</th>
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Status</th>
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Posted</th>
+                    <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {jobs.map((job) => (
                     <tr key={job.id} className="hover:bg-black/[0.02] transition-colors">
                       <td className="p-4 text-sm text-[#111827] border-b border-[#e5e7eb] font-medium">{job.title}</td>
-                      <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{job.category}</td>
+                      <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb] capitalize">{job.category?.replace(/_/g, ' ')}</td>
                       <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{job.location}</td>
                       <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{job.slots || '-'}</td>
                       <td className="p-4 text-sm border-b border-[#e5e7eb]">
@@ -76,6 +69,14 @@ const MyJobs = () => {
                         </span>
                       </td>
                       <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{formatDate(job.created_at)}</td>
+                      <td className="p-4 text-sm border-b border-[#e5e7eb]">
+                        <Link
+                          to={`/employer/my-jobs/${job.id}`}
+                          className="inline-flex items-center px-3 py-1.5 bg-[#136040] text-white text-xs font-medium rounded-lg hover:bg-[#0f4f34] transition-colors no-underline"
+                        >
+                          View
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
