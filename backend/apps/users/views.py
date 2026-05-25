@@ -358,7 +358,7 @@ class ForgotPasswordRequestView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            # Already existing OTP system reuse — role 'reset' ayi store cheyyuka
+            # Already existing OTP system reuse 
             otp = generate_and_store_otp(email, role='reset')
             send_email_otp(email, otp)
 
@@ -381,7 +381,7 @@ class ResetPasswordView(APIView):
         try:
             serializer = ResetPasswordSerializer(data=request.data)
 
-            # ✅ Oro field um validate — error undenkil return
+            # Oro field um validate — error undenkil return
             if not serializer.is_valid():
                 return Response(
                     serializer.errors,
