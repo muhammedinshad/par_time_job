@@ -1,84 +1,82 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { fetchProfile, updateProfile } from '../../api/userApi';
+import { useNavigate } from 'react-router-dom';
+import { fetchProfile } from '../../api/userApi';
+import { changePassword } from '../../api/authApi';
 
-const GENDER_CHOICES = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' },
-];
+const BASE_URL = 'http://127.0.0.1:8000';
 
-const fileUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `http://localhost:8000${url}`;
+const buildMediaUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  // path is like "cvs/filename.pdf" — prepend /media/
+  return `${BASE_URL}/media/${path}`;
 };
+
+const GENDER_LABELS = { male: 'Male', female: 'Female', other: 'Other' };
+
+const InfoRow = ({ label, value }) => (
+  <div className="py-3 border-b border-gray-50 last:border-0">
+    <p className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">{label}</p>
+    <p className="text-[14px] font-medium text-[#111827]">
+      {value || <span className="text-[#9ca3af] font-normal italic">Not set</span>}
+    </p>
+  </div>
+);
 
 const Profile = () => {
   const { user } = useSelector((state) => state.auth);
-  const [formData, setFormData] = useState({
-    full_name: user?.name || '',
-    phone_number: '',
-    current_location: '',
-    date_of_birth: '',
-    gender: '',
-    cv: null,
-  });
-  const [profileData, setProfileData] = useState(null);
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdError, setPwdError] = useState('');
+  const [pwdSuccess, setPwdSuccess] = useState('');
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmNewPassword) {
+      setPwdError('New passwords do not match.');
+      setPwdSuccess('');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPwdError('New password must be at least 8 characters long.');
+      setPwdSuccess('');
+      return;
+    }
+    
+    setPwdLoading(true);
+    setPwdError('');
+    setPwdSuccess('');
+    
+    try {
+      await changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_password: confirmNewPassword
+      });
+      setPwdSuccess('Password changed successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (err) {
+      setPwdError(err.response?.data?.error || err.response?.data?.message || 'Failed to change password. Please check your current password.');
+    } finally {
+      setPwdLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchProfile()
-      .then((data) => {
-        setProfileData(data);
-        setFormData((prev) => ({
-          ...prev,
-          full_name: data.full_name || user?.name || '',
-          phone_number: data.phone_number || '',
-          current_location: data.current_location || '',
-          date_of_birth: data.date_of_birth || '',
-          gender: data.gender || '',
-        }));
-      })
+      .then(setProfile)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [user?.name]);
-
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setSuccess('');
-    setError('');
-    try {
-      const payload = new FormData();
-      if (formData.full_name) payload.append('full_name', formData.full_name);
-      if (formData.phone_number) payload.append('phone_number', formData.phone_number);
-      if (formData.current_location) payload.append('current_location', formData.current_location);
-      if (formData.date_of_birth) payload.append('date_of_birth', formData.date_of_birth);
-      if (formData.gender) payload.append('gender', formData.gender);
-      if (formData.cv) payload.append('cv', formData.cv);
-
-      await updateProfile(payload);
-      setSuccess('Profile updated successfully!');
-      const updated = await fetchProfile();
-      setProfileData(updated);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update profile.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -88,133 +86,159 @@ const Profile = () => {
     );
   }
 
+  const cvUrl = buildMediaUrl(profile?.cv || profile?.cv_url || null);
+
   return (
     <div>
       <div className="flex items-end justify-between mb-8 mt-6">
         <div>
           <h1 className="text-[32px] font-bold text-[#111827] tracking-tight mb-2">My Profile</h1>
-          <p className="text-[15px] text-[#9ca3af] font-medium">Manage your personal information.</p>
+          <p className="text-[15px] text-[#9ca3af] font-medium">Your personal information at a glance.</p>
+        </div>
+        <button
+          onClick={() => navigate('edit')}
+          className="px-5 py-2.5 bg-[#136040] text-white text-sm font-semibold rounded-xl hover:bg-[#0f4f34] transition-colors flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          Edit Profile
+        </button>
+      </div>
+
+      <div className="max-w-[600px] space-y-5">
+        {/* Personal Details Card */}
+        <div className="bg-white rounded-[24px] border border-[#e5e7eb] p-6 shadow-sm">
+          <h2 className="text-[12px] font-semibold text-[#136040] uppercase tracking-wider mb-4">Personal Details</h2>
+          <InfoRow label="Email" value={user?.email} />
+          <InfoRow label="Full Name" value={profile?.full_name} />
+          <InfoRow label="Phone Number" value={profile?.phone_number} />
+          <InfoRow label="Date of Birth" value={profile?.date_of_birth} />
+          <InfoRow label="Gender" value={GENDER_LABELS[profile?.gender] || profile?.gender} />
+          <InfoRow label="Current Location" value={profile?.current_location} />
+        </div>
+
+        {/* CV Card */}
+        <div className="bg-white rounded-[24px] border border-[#e5e7eb] p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[12px] font-semibold text-[#136040] uppercase tracking-wider">CV / Resume</h2>
+            {cvUrl && (
+              <a
+                href={cvUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="text-xs font-semibold text-[#136040] bg-[#136040]/10 px-3 py-1.5 rounded-lg hover:bg-[#136040]/20 transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download CV
+              </a>
+            )}
+          </div>
+
+          {cvUrl ? (
+            <div className="rounded-xl overflow-hidden border border-gray-100">
+              <iframe
+                src={cvUrl}
+                title="CV Preview"
+                style={{ width: '300px', height: '200px', display: 'block' }}
+              />
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+              <svg className="w-10 h-10 text-[#9ca3af] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="text-sm text-[#9ca3af] mb-3">No CV uploaded yet</p>
+              <button
+                onClick={() => navigate('edit')}
+                className="px-4 py-2 bg-[#136040] text-white text-xs font-semibold rounded-lg hover:bg-[#0f4f34] transition-colors"
+              >
+                Upload CV
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Change Password Card */}
+        <div className="bg-white rounded-[24px] border border-[#e5e7eb] p-6 shadow-sm">
+          <h2 className="text-[12px] font-semibold text-[#136040] uppercase tracking-wider mb-4">Change Password</h2>
+          
+          {pwdError && (
+            <div className="bg-red-50 text-red-600 text-sm rounded-xl p-4 mb-4 border border-red-200">
+              {pwdError}
+            </div>
+          )}
+          
+          {pwdSuccess && (
+            <div className="bg-emerald-50 text-emerald-700 text-sm rounded-xl p-4 mb-4 border border-emerald-200 flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {pwdSuccess}
+            </div>
+          )}
+
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1.5">Current Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 text-[14px] text-[#111827] placeholder-[#9ca3af] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040] focus:ring-1 focus:ring-[#136040] transition-colors"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1.5">New Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 text-[14px] text-[#111827] placeholder-[#9ca3af] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040] focus:ring-1 focus:ring-[#136040] transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1.5">Confirm New Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 text-[14px] text-[#111827] placeholder-[#9ca3af] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040] focus:ring-1 focus:ring-[#136040] transition-colors"
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={pwdLoading}
+                className="px-5 py-2.5 bg-[#136040] hover:bg-[#0f4f34] text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {pwdLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Updating...</span>
+                  </>
+                ) : (
+                  'Update Password'
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-
-      <div className="max-w-[600px]">
-        <form onSubmit={handleSubmit} className="bg-white rounded-[24px] border border-[#e5e7eb] p-6 shadow-sm space-y-5">
-          {success && (
-            <div className="bg-emerald-50 text-emerald-700 text-sm rounded-xl p-4 border border-emerald-200">
-              {success}
-            </div>
-          )}
-          {error && (
-            <div className="bg-red-50 text-red-600 text-sm rounded-xl p-4 border border-red-200">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-medium text-[#111827] mb-1.5">Full Name</label>
-            <input
-              type="text"
-              name="full_name"
-              value={formData.full_name}
-              onChange={handleChange}
-              placeholder="Your full name"
-              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#111827] mb-1.5">Phone Number</label>
-            <input
-              type="text"
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleChange}
-              placeholder="Your phone number"
-              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#111827] mb-1.5">Location</label>
-            <input
-              type="text"
-              name="current_location"
-              value={formData.current_location}
-              onChange={handleChange}
-              placeholder="Your current location"
-              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#111827] mb-1.5">Date of Birth</label>
-            <input
-              type="date"
-              name="date_of_birth"
-              value={formData.date_of_birth}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#111827] mb-1.5">Gender</label>
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040] bg-white"
-            >
-              <option value="">Select gender</option>
-              {GENDER_CHOICES.map((g) => (
-                <option key={g.value} value={g.value}>{g.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#111827] mb-1.5">CV / Resume</label>
-            {profileData?.cv_url && (
-              <div className="mb-2">
-                <a
-                  href={fileUrl(profileData.cv_url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[#136040] font-medium underline hover:text-[#0f4f34]"
-                >
-                  View current CV
-                </a>
-              </div>
-            )}
-            <input
-              type="file"
-              name="cv"
-              accept=".pdf,.doc,.docx"
-              onChange={handleChange}
-              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#136040]/10 file:text-[#136040] hover:file:bg-[#136040]/20"
-            />
-            <p className="text-[11px] text-[#9ca3af] mt-1">Upload a new CV to replace your existing one.</p>
-          </div>
-
-          <div className="pt-3 border-t border-gray-100">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-8 py-2.5 bg-[#136040] text-white text-sm font-semibold rounded-xl hover:bg-[#0f4f34] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {submitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
+
   );
 };
 

@@ -11,6 +11,14 @@ const formatDate = (dateStr) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const BASE_URL = 'http://127.0.0.1:8000';
+
+const buildMediaUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${BASE_URL}/media/${path}`;
+};
+
 const Applicants = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +72,7 @@ const Applicants = () => {
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Category</th>
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Status</th>
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">Applied</th>
+                    <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50">CV</th>
                     <th className="text-left p-4 text-[12px] font-semibold uppercase tracking-wider text-[#9ca3af] border-b border-[#e5e7eb] bg-gray-50"></th>
                   </tr>
                 </thead>
@@ -86,6 +95,25 @@ const Applicants = () => {
                         <StatusBadge status={app.status} />
                       </td>
                       <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{formatDate(app.applied_at)}</td>
+                      <td className="p-4 text-sm border-b border-[#e5e7eb]">
+                        {(() => {
+                          const cvUrl = buildMediaUrl(app.cv_snapshot || app.cv_url || null);
+                          return cvUrl ? (
+                            <button
+                              onClick={() => window.open(cvUrl, '_blank')}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#136040]/10 text-[#136040] text-xs font-semibold rounded-lg hover:bg-[#136040]/20 transition-colors border-none shadow-none"
+                            >
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              View CV
+                            </button>
+                          ) : (
+                            <span className="text-xs text-[#9ca3af]">No CV</span>
+                          );
+                        })()}
+                      </td>
                       <td className="p-4 text-sm border-b border-[#e5e7eb]">
                         <Link
                           to={`/employer/applications/${app.id}`}

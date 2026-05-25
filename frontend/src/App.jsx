@@ -6,6 +6,7 @@ import RoleRoute from './routes/RoleRoute';
 // Pages
 import VerificationPage from './pages/auth/VerificationPage';
 import LoginPage from './pages/auth/LoginPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import EmployerRegister from './pages/auth/EmployerRegister';
 import JobSeekerRegister from './pages/auth/JobSeekerRegister';
 import EmployerDashboard from './pages/employer/EmployerDashboard';
@@ -22,6 +23,7 @@ import JobDetail from './pages/jobseeker/JobDetail';
 import SeekerMyApplications from './pages/jobseeker/MyApplications';
 import SeekerApplicationDetail from './pages/jobseeker/ApplicationDetail';
 import SeekerProfile from './pages/jobseeker/Profile';
+import ProfileEdit from './pages/jobseeker/ProfileEdit';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProfilePage from './pages/auth/ProfilePage';
 import GoogleCallback from './pages/auth/GoogleCallback';
@@ -64,6 +66,7 @@ function AppContent() {
                 <Route path="my-applications" element={<SeekerMyApplications />} />
                 <Route path="my-applications/:id" element={<SeekerApplicationDetail />} />
                 <Route path="profile" element={<SeekerProfile />} />
+                <Route path="profile/edit" element={<ProfileEdit />} />
               </Route>
             </Route>
           </Route>
@@ -80,6 +83,7 @@ function AppContent() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify" element={<VerificationPage />} />
             <Route path="/register/employer" element={<EmployerRegister />} />
             <Route path="/register/jobseeker" element={<JobSeekerRegister />} />

@@ -76,7 +76,10 @@ const LoginPage = () => {
         </button>
 
         <p className="text-center mt-4 text-[#6b7280]">
-          Don't have an account? <span onClick={() => navigate('/verify')} className="text-[#136040] cursor-pointer underline">Register</span>
+          Don't have an account? <span onClick={() => navigate('/verify')} className="text-[#136040] cursor-pointer underline font-semibold">Register</span>
+        </p>
+        <p className="text-center mt-2 text-[#6b7280]">
+          Forgot your password? <span onClick={() => navigate('/forgot-password')} className="text-[#136040] cursor-pointer underline font-semibold">Reset it here</span>
         </p>
       </form>
     </div>

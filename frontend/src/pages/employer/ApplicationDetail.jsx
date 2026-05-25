@@ -53,10 +53,13 @@ const ApplicationDetail = () => {
     });
   };
 
-  const fileUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    return `http://localhost:8000${url}`;
+  const BASE_URL = 'http://127.0.0.1:8000';
+
+  const buildMediaUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    // path is like "cvs/filename.pdf" — prepend /media/
+    return `${BASE_URL}/media/${path}`;
   };
 
   const renderCategoryFields = () => {
@@ -78,7 +81,7 @@ const ApplicationDetail = () => {
               <div>
                 <span className="text-sm text-[#6b7280] block mb-1">License Photo:</span>
                 <a
-                  href={fileUrl(app.license_photo_url)}
+                  href={buildMediaUrl(app.license_photo_url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-[#136040] font-medium underline hover:text-[#0f4f34]"
@@ -113,7 +116,7 @@ const ApplicationDetail = () => {
               <div>
                 <span className="text-sm text-[#6b7280] block mb-1">Health Certificate:</span>
                 <a
-                  href={fileUrl(app.health_cert_url)}
+                  href={buildMediaUrl(app.health_cert_url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-[#136040] font-medium underline hover:text-[#0f4f34]"
@@ -216,19 +219,39 @@ const ApplicationDetail = () => {
                     <p className="text-sm text-[#111827] bg-gray-50 rounded-xl p-4">{app.cover_note || 'No cover note provided.'}</p>
                   </div>
                   <div>
-                    <span className="text-xs text-[#9ca3af] block mb-1">CV</span>
-                    {app.cv_url ? (
-                      <a
-                        href={fileUrl(app.cv_url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-[#136040] font-medium underline hover:text-[#0f4f34]"
-                      >
-                        Download CV
-                      </a>
-                    ) : (
-                      <span className="text-sm text-[#9ca3af]">No CV uploaded.</span>
-                    )}
+                    <span className="text-xs text-[#9ca3af] block mb-1">CV / Resume</span>
+                    {(() => {
+                      const cvPath = app.cv_snapshot || app.cv_url || null;
+                      const cvUrl = buildMediaUrl(cvPath);
+                      return cvUrl ? (
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => window.open(cvUrl, '_blank')}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#136040] text-white text-xs font-semibold rounded-lg hover:bg-[#0f4f34] transition-colors border-none shadow-sm"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View CV
+                          </button>
+                          <a
+                            href={cvUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="inline-flex items-center gap-1.5 text-xs text-[#136040] font-semibold underline hover:text-[#0f4f34]"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Download
+                          </a>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-[#9ca3af]">No CV uploaded.</span>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

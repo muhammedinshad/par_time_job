@@ -27,6 +27,15 @@ const QUALIFICATION_CHOICES = [
   { value: 'other', label: 'Other' },
 ];
 
+const BASE_URL = 'http://127.0.0.1:8000';
+
+const buildMediaUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  // path is like "cvs/filename.pdf" — prepend /media/
+  return `${BASE_URL}/media/${path}`;
+};
+
 const JobDetail = () => {
   const { id } = useParams();
   const [job, setJob] = useState(null);
@@ -36,6 +45,7 @@ const JobDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+
   const [formData, setFormData] = useState({
     cover_note: '',
     available_from: '',
@@ -44,9 +54,12 @@ const JobDetail = () => {
     qualification: '',
     experience_details: '',
     health_certificate: null,
-    cv: null,
   });
-  const [profileCv, setProfileCv] = useState(null);
+
+  // CV state
+  const [profileCvUrl, setProfileCvUrl] = useState(null); // URL string from profile
+  const [newCvFile, setNewCvFile] = useState(null);       // File object user uploads
+  const [useNewCv, setUseNewCv] = useState(false);        // whether user chose to upload a new one
 
   useEffect(() => {
     Promise.all([
@@ -66,9 +79,10 @@ const JobDetail = () => {
     setShowForm(true);
     try {
       const profile = await fetchProfile();
-      setProfileCv(profile.cv_url || profile.cv || null);
+      const raw = profile.cv || profile.cv_url || null;
+      setProfileCvUrl(raw ? buildMediaUrl(raw) : null);
     } catch {
-      setProfileCv(null);
+      setProfileCvUrl(null);
     }
   };
 
@@ -78,6 +92,11 @@ const JobDetail = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value,
     }));
+  };
+
+  const handleNewCvChange = (e) => {
+    const file = e.target.files[0] || null;
+    setNewCvFile(file);
   };
 
   const handleSubmit = async (e) => {
@@ -91,7 +110,14 @@ const JobDetail = () => {
       formPayload.append('job', id);
 
       if (formData.cover_note) formPayload.append('cover_note', formData.cover_note);
-      if (formData.cv) formPayload.append('cv_snapshot', formData.cv);
+      if (formData.available_from) formPayload.append('available_from', formData.available_from);
+
+      // Bug 2 Fix: send cv_snapshot only once
+      if (newCvFile) {
+        formPayload.append('cv_snapshot', newCvFile);
+      } else if (profileCvUrl) {
+        formPayload.append('cv_snapshot', profileCvUrl);
+      }
 
       const category = job?.category;
       if (category === 'delivery') {
@@ -147,7 +173,6 @@ const JobDetail = () => {
 
   const renderExtraFormFields = () => {
     const category = job.category;
-
     if (category === 'delivery') {
       return (
         <>
@@ -174,7 +199,6 @@ const JobDetail = () => {
         </>
       );
     }
-
     if (category === 'education') {
       return (
         <>
@@ -206,7 +230,6 @@ const JobDetail = () => {
         </>
       );
     }
-
     if (category === 'health_care') {
       return (
         <>
@@ -234,19 +257,25 @@ const JobDetail = () => {
         </>
       );
     }
-
     return null;
   };
+
+  const newCvPreviewUrl = newCvFile ? URL.createObjectURL(newCvFile) : null;
+  const canSubmit = newCvFile || profileCvUrl;
 
   return (
     <div>
       <div className="mb-6 mt-4">
-        <Link to="/jobseeker/dashboard/browse-jobs" className="text-sm text-[#136040] font-medium hover:underline bg-transparent p-0 border-none shadow-none no-underline">
+        <Link
+          to="/jobseeker/dashboard/browse-jobs"
+          className="text-sm text-[#136040] font-medium hover:underline bg-transparent p-0 border-none shadow-none no-underline"
+        >
           &larr; Back to Jobs
         </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Job Details */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-[24px] border border-[#e5e7eb] p-6 shadow-sm">
             <div className="flex items-start justify-between mb-4">
@@ -294,6 +323,7 @@ const JobDetail = () => {
           </div>
         </div>
 
+        {/* Sidebar: Apply Panel */}
         <div className="space-y-6">
           {hasApplied ? (
             <div className="bg-white rounded-[24px] border border-[#e5e7eb] p-6 shadow-sm text-center">
@@ -318,6 +348,12 @@ const JobDetail = () => {
             </div>
           ) : null}
 
+          {success && (
+            <div className="bg-emerald-50 text-emerald-700 text-sm rounded-xl p-4 border border-emerald-200">
+              {success}
+            </div>
+          )}
+
           {showForm && (
             <div className="bg-white rounded-[24px] border border-[#e5e7eb] p-6 shadow-sm">
               <div className="flex items-center justify-between mb-5">
@@ -330,19 +366,12 @@ const JobDetail = () => {
                 </button>
               </div>
 
-              {success && (
-                <div className="bg-emerald-50 text-emerald-700 text-sm rounded-xl p-4 mb-4 border border-emerald-200">
-                  {success}
-                </div>
-              )}
-
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm rounded-xl p-4 mb-4 border border-red-200">
-                  {error}
-                </div>
+                <div className="bg-red-50 text-red-600 text-sm rounded-xl p-4 mb-4 border border-red-200">{error}</div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Cover Note */}
                 <div>
                   <label className="block text-xs font-medium text-[#111827] mb-1.5">Cover Note</label>
                   <textarea
@@ -355,30 +384,68 @@ const JobDetail = () => {
                   />
                 </div>
 
+                {/* CV Section — Feature 2 */}
                 <div>
-                  <label className="block text-xs font-medium text-[#111827] mb-1.5">CV</label>
-                  {profileCv ? (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-2">
-                      <p className="text-xs text-emerald-700">
-                        Your profile CV will be automatically attached. Upload a different one below if needed.
+                  <label className="block text-xs font-medium text-[#111827] mb-1.5">CV / Resume</label>
+
+                  {profileCvUrl && !useNewCv ? (
+                    /* Show profile CV preview with option to swap */
+                    <div className="space-y-2">
+                      <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                        ✅ Your profile CV will be used:
                       </p>
+                      <iframe
+                        src={profileCvUrl}
+                        title="Profile CV Preview"
+                        style={{ width: '300px', height: '200px', display: 'block', borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setUseNewCv(true)}
+                        className="text-xs text-[#136040] font-semibold underline bg-transparent border-none shadow-none p-0 hover:translate-y-0 hover:text-[#0f4f34]"
+                      >
+                        📁 Upload a different CV instead
+                      </button>
                     </div>
                   ) : (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-2">
-                      <p className="text-xs text-amber-700">
-                        No CV found in your profile. You must upload one to apply.
-                      </p>
+                    /* No profile CV or user chose to upload new */
+                    <div className="space-y-2">
+                      {!profileCvUrl && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                          <p className="text-xs text-amber-700">No CV found in your profile. You must upload one to apply.</p>
+                        </div>
+                      )}
+                      {profileCvUrl && useNewCv && (
+                        <button
+                          type="button"
+                          onClick={() => { setUseNewCv(false); setNewCvFile(null); }}
+                          className="text-xs text-[#136040] font-semibold underline bg-transparent border-none shadow-none p-0 hover:translate-y-0"
+                        >
+                          ← Use my profile CV instead
+                        </button>
+                      )}
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleNewCvChange}
+                        className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#136040]/10 file:text-[#136040] hover:file:bg-[#136040]/20"
+                      />
+                      {/* Preview of newly selected file */}
+                      {newCvPreviewUrl && (
+                        <div>
+                          <p className="text-[11px] text-[#9ca3af] mb-1">New CV preview:</p>
+                          <iframe
+                            src={newCvPreviewUrl}
+                            title="New CV Preview"
+                            style={{ width: '300px', height: '200px', display: 'block', borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
-                  <input
-                    type="file"
-                    name="cv"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleChange}
-                    className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#136040]/10 file:text-[#136040] hover:file:bg-[#136040]/20"
-                  />
                 </div>
 
+                {/* Available From */}
                 <div>
                   <label className="block text-xs font-medium text-[#111827] mb-1.5">Available From</label>
                   <input
@@ -394,7 +461,7 @@ const JobDetail = () => {
 
                 <button
                   type="submit"
-                  disabled={submitting || (!profileCv && !formData.cv)}
+                  disabled={submitting || !canSubmit}
                   className="w-full px-6 py-3 bg-[#136040] text-white text-sm font-semibold rounded-xl hover:bg-[#0f4f34] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {submitting ? (

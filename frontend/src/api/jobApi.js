@@ -12,7 +12,7 @@ export const fetchJobDetail = async (id) => {
 
 export const applyToJob = async (formData) => {
   const response = await axiosInstance.post('application/apply-job/', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': undefined },
   });
   return response.data;
 };
@@ -53,6 +53,8 @@ export const fetchEmployerProfile = async () => {
 };
 
 export const updateEmployerProfile = async (data) => {
-  const response = await axiosInstance.patch('auth/profile/update/', data);
+  const response = await axiosInstance.patch('auth/profile/update/', data, {
+    headers: { 'Content-Type': 'application/json' },
+  });
   return response.data;
 };

@@ -6,6 +6,9 @@ export const fetchProfile = async () => {
 };
 
 export const updateProfile = async (data) => {
-  const response = await axiosInstance.patch('auth/profile/update/', data);
+  const isFormData = data instanceof FormData;
+  const response = await axiosInstance.patch('auth/profile/update/', data, {
+    headers: isFormData ? { 'Content-Type': undefined } : {},
+  });
   return response.data;
 };
