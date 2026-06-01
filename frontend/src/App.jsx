@@ -31,7 +31,7 @@ import RoleSelection from './pages/auth/RoleSelection';
 import CompleteProfile from './pages/auth/CompleteProfile';
 
 const isDashboardRoute = (pathname) =>
-  pathname.startsWith('/employer') || pathname.startsWith('/jobseeker');
+  pathname.startsWith('/employer') || pathname.startsWith('/jobseeker') || pathname.startsWith('/admin');
 
 function AppContent() {
   const location = useLocation();
