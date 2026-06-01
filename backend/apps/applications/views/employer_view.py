@@ -88,7 +88,14 @@ class ApplicationStatusUpdateView(APIView):
             )
 
             if serializer.is_valid():
-                serializer.save()
+                instance = serializer.save()
+                
+                if instance.status == 'rejected':
+                    instance.delete()
+                    return Response(
+                        {'message': 'Application rejected and removed.'},
+                        status=status.HTTP_200_OK
+                )
                 return Response(
                     {'message': 'Application status updated successfully.', 'data': serializer.data},
                     status=status.HTTP_200_OK

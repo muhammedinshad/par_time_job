@@ -59,7 +59,7 @@ const ApplicationDetail = () => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
     // path is like "cvs/filename.pdf" — prepend /media/
-    return `${BASE_URL}/media/${path}`;
+    return `${BASE_URL}${path}`;
   };
 
   const renderCategoryFields = () => {

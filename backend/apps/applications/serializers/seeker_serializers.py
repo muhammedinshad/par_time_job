@@ -95,7 +95,7 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
             )
 
         # Profile CV auto snapshot
-        cv_snapshot = validated_data.get('cv_snapshot') or seeker.cv
+        cv_snapshot = validated_data.pop('cv_snapshot', None) or seeker.cv
 
         return Application.objects.create(
             seeker      = seeker,
@@ -104,7 +104,7 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         )
         
 
-# ─── Job Seeker സ്വന്തം Applications കാണുമ്പോൾ ────────────────────────────────
+# ─── See the Applications for Job Seeker ────────────────────────────────
 class MyApplicationSerializer(serializers.ModelSerializer):
     job_title     = serializers.CharField(source='job.title', read_only=True)
     job_category  = serializers.CharField(source='job.category', read_only=True)

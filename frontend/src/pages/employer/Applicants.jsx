@@ -16,7 +16,7 @@ const BASE_URL = 'http://127.0.0.1:8000';
 const buildMediaUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${BASE_URL}/media/${path}`;
+  return `${BASE_URL}${path}`;
 };
 
 const Applicants = () => {

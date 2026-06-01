@@ -375,7 +375,7 @@ class ForgotPasswordRequestView(APIView):
 
 
 class ResetPasswordView(APIView):
-    """Step 2 — OTP verify + new password set cheyyuka"""
+    """Step 2 — OTP verify + set new password """
 
     def post(self, request):
         try:
@@ -415,7 +415,7 @@ class ResetPasswordView(APIView):
                 {'error': 'Something went wrong', 'details': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
+            
 
 class ProfileUpdateView(APIView):
     permission_classes = []
@@ -469,6 +469,8 @@ class ProfileUpdateView(APIView):
                 {'error': 'Something went wrong', 'details': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+            
+
             
 #------ Google auth -------
 

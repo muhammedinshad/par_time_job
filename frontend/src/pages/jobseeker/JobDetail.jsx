@@ -33,7 +33,7 @@ const buildMediaUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   // path is like "cvs/filename.pdf" — prepend /media/
-  return `${BASE_URL}/media/${path}`;
+  return `${BASE_URL}${path}`;
 };
 
 const JobDetail = () => {
@@ -45,6 +45,7 @@ const JobDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [cvBlobUrl, setCvBlobUrl] = useState(null);
 
   const [formData, setFormData] = useState({
     cover_note: '',
@@ -74,6 +75,14 @@ const JobDetail = () => {
       .catch(() => setJob(null))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+  if (!profileCvUrl) return;
+  fetch(profileCvUrl, { credentials: 'include' })
+    .then(res => res.blob())
+    .then(blob => setCvBlobUrl(URL.createObjectURL(blob)))
+    .catch(() => {});
+}, [profileCvUrl]);
 
   const openApplyForm = async () => {
     setShowForm(true);
@@ -116,7 +125,10 @@ const JobDetail = () => {
       if (newCvFile) {
         formPayload.append('cv_snapshot', newCvFile);
       } else if (profileCvUrl) {
-        formPayload.append('cv_snapshot', profileCvUrl);
+        const response = await fetch(profileCvUrl, { credentials: 'include' });
+        const blob = await response.blob();
+        const file = new File([blob], 'cv.pdf', { type: 'application/pdf' });
+        formPayload.append('cv_snapshot', file); // ✅ sending actual file
       }
 
       const category = job?.category;
@@ -395,7 +407,7 @@ const JobDetail = () => {
                         ✅ Your profile CV will be used:
                       </p>
                       <iframe
-                        src={profileCvUrl}
+                        src={cvBlobUrl}
                         title="Profile CV Preview"
                         style={{ width: '300px', height: '200px', display: 'block', borderRadius: '8px', border: '1px solid #e5e7eb' }}
                       />

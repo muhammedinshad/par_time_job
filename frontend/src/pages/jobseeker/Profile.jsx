@@ -10,7 +10,7 @@ const buildMediaUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   // path is like "cvs/filename.pdf" — prepend /media/
-  return `${BASE_URL}/media/${path}`;
+  return `${BASE_URL}${path}`;
 };
 
 const GENDER_LABELS = { male: 'Male', female: 'Female', other: 'Other' };
@@ -36,6 +36,8 @@ const Profile = () => {
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdError, setPwdError] = useState('');
   const [pwdSuccess, setPwdSuccess] = useState('');
+
+  const [cvBlobUrl, setCvBlobUrl] = useState(null);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -77,6 +79,16 @@ const Profile = () => {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+  
+  const cvUrl = buildMediaUrl(profile?.cv || profile?.cv_url || null);
+  
+  useEffect(() => {
+  if (!cvUrl) return;
+  fetch(cvUrl, { credentials: 'include' })
+    .then(res => res.blob())
+    .then(blob => setCvBlobUrl(URL.createObjectURL(blob)))
+    .catch(() => {});
+}, [cvUrl]);
 
   if (loading) {
     return (
@@ -85,9 +97,7 @@ const Profile = () => {
       </div>
     );
   }
-
-  const cvUrl = buildMediaUrl(profile?.cv || profile?.cv_url || null);
-
+  console.log(cvUrl)
   return (
     <div>
       <div className="flex items-end justify-between mb-8 mt-6">
@@ -141,7 +151,7 @@ const Profile = () => {
           {cvUrl ? (
             <div className="rounded-xl overflow-hidden border border-gray-100">
               <iframe
-                src={cvUrl}
+                src={cvBlobUrl}
                 title="CV Preview"
                 style={{ width: '300px', height: '200px', display: 'block' }}
               />

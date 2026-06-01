@@ -27,6 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
         ('employer',   'Employer'),
         ('job_seeker', 'Job Seeker'),
+        ('admin','Admin'),
     ]
 
   
