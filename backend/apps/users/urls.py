@@ -1,12 +1,13 @@
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import (
+from .views.views import (
     SendOTPView, VerifyOTPView,
     EmployerRegisterView, JobSeekerRegisterView,
     LoginView,LogoutView,CookieTokenRefreshView,ProfileView,
     ForgotPasswordRequestView,ResetPasswordView,ProfileUpdateView,
     GoogleCallbackView,GoogleCompleteProfileView
 )
+from .views.adminView import AdminUserActionView,AdminUserListView
 
 urlpatterns = [
     path('send-otp/',SendOTPView.as_view(), name='send-otp'),
@@ -29,4 +30,7 @@ urlpatterns = [
     
     path('forgot-password/', ForgotPasswordRequestView.as_view(), name='forgot-password'),
     path('reset-password/',  ResetPasswordView.as_view(), name='reset-password'),
+    
+    path('admin/users/',            AdminUserListView.as_view(),   name='admin-user-list'),
+    path('admin/users/<int:user_id>/', AdminUserActionView.as_view(), name='admin-user-action'),
 ]

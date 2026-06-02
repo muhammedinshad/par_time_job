@@ -5,6 +5,12 @@ import { logout } from '../../store/authSlice';
 import { logoutApi } from '../../api/authApi';
 import { fetchActiveJobs } from '../../api/jobApi';
 import {
+  fetchAdminUsers,
+  blockUser as blockUserApi,
+  unblockUser as unblockUserApi,
+  deleteUser as deleteUserApi,
+} from '../../api/adminApi';
+import {
   Squares2X2Icon,
   UsersIcon,
   BriefcaseIcon,
@@ -29,12 +35,6 @@ import {
   ExclamationCircleIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
-import {
-  getAllUsers,
-  blockUnblockUser,
-  deleteUser,
-  getAdminStats
-} from './adminMockStore';
 
 // ── Normalize a raw job from the backend API into the shape the UI expects ──
 const CATEGORY_LABELS = {
@@ -69,6 +69,24 @@ const normalizeJob = (job) => ({
   createdAt:     job.created_at     || '',
   description:   job.description    || '',
   employerId:    job.employer       || null,
+});
+
+const normalizeUser = (u) => ({
+  id:            u.id,
+  name:          u.name || u.email,
+  
+  email:         u.email,
+  role:          u.role,
+  status:        u.status,
+  joinedDate:    u.created_at ? u.created_at.slice(0, 10) : '',
+  phone:         u.phone || '',
+  location:      u.location || '',
+  businessName:  u.business_name || '',
+  businessType:  u.business_type || '',
+  description:   u.description || '',
+  dob:           u.dob || '',
+  gender:        u.gender || '',
+  avatar:        (u.name || u.email)[0].toUpperCase(),
 });
 
 const AdminDashboard = () => {
@@ -126,28 +144,35 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // ── Load users from mock store (no backend list-users endpoint exists) ──
-  const loadUsersFromMock = useCallback(() => {
-    const fetchedUsers = getAllUsers();
-    setUsers(fetchedUsers);
-    return fetchedUsers;
+  // ── Load users from the real backend API ──
+  const loadUsersFromApi = useCallback(async () => {
+    try {
+      const data = await fetchAdminUsers();
+      const users = (data.users || []).map(normalizeUser);
+      setUsers(users);
+      return users;
+    } catch (err) {
+      console.error('Failed to fetch users from API:', err);
+      return [];
+    }
   }, []);
 
   // ── Combined load + sync stats ─────────────────────────────────────────
   const loadData = useCallback(async () => {
     const [normalizedJobs, fetchedUsers] = await Promise.all([
       loadJobsFromAPI(),
-      Promise.resolve(loadUsersFromMock()),
+      loadUsersFromApi(),
     ]);
 
-    // Compute stats from real job count + mock user counts
-    const mockUserStats = getAdminStats(); // uses localStorage user counts
+    // Compute stats from real job count + real user counts
+    const employerCount  = fetchedUsers.filter(u => u.role === 'employer').length;
+    const jobSeekerCount = fetchedUsers.filter(u => u.role === 'job_seeker').length;
     setStats({
       totalJobsCount:      normalizedJobs.length,
-      totalEmployerUsers:  mockUserStats.totalEmployerUsers,
-      totalJobSeekerUsers: mockUserStats.totalJobSeekerUsers,
+      totalEmployerUsers:  employerCount,
+      totalJobSeekerUsers: jobSeekerCount,
     });
-  }, [loadJobsFromAPI, loadUsersFromMock]);
+  }, [loadJobsFromAPI, loadUsersFromApi]);
 
   useEffect(() => {
     loadData();
@@ -158,20 +183,25 @@ const AdminDashboard = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const handleBlockToggle = (userId, userName) => {
-    const updatedUsers = blockUnblockUser(userId);
-    setUsers(updatedUsers);
-    
-    // Only recalculate user-related stats — preserve the real job count from the API
-    const mockUserStats = getAdminStats();
-    setStats(prev => ({
-      ...prev, // Keep totalJobsCount from the real API
-      totalEmployerUsers:  mockUserStats.totalEmployerUsers,
-      totalJobSeekerUsers: mockUserStats.totalJobSeekerUsers,
-    }));
-    
-    const user = updatedUsers.find(u => u.id === userId);
-    triggerNotification(`Successfully ${user.status === 'Blocked' ? 'blocked' : 'unblocked'} ${userName}.`, 'info');
+  const handleBlockToggle = async (userId, userName) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    const wasBlocked = user.status === 'Blocked';
+    try {
+      if (wasBlocked) {
+        await unblockUserApi(userId);
+      } else {
+        await blockUserApi(userId);
+      }
+      setUsers(prev => prev.map(u =>
+        u.id === userId
+          ? { ...u, status: wasBlocked ? 'Active' : 'Blocked' }
+          : u
+      ));
+      triggerNotification(`Successfully ${wasBlocked ? 'unblocked' : 'blocked'} ${userName}.`, 'info');
+    } catch {
+      triggerNotification(`Failed to ${wasBlocked ? 'unblock' : 'block'} ${userName}.`, 'error');
+    }
   };
 
   const handleDeleteClick = (type, id) => {
@@ -183,16 +213,19 @@ const AdminDashboard = () => {
     
     const { type, id } = showDeleteConfirm;
     if (type === 'user') {
-      const updated = deleteUser(id);
-      setUsers(updated);
-      triggerNotification('User account deleted successfully.', 'error');
-      // Reload stats after user delete
-      const mockUserStats = getAdminStats();
-      setStats(prev => ({
-        ...prev,
-        totalEmployerUsers:  mockUserStats.totalEmployerUsers,
-        totalJobSeekerUsers: mockUserStats.totalJobSeekerUsers,
-      }));
+      try {
+        await deleteUserApi(id);
+        setUsers(prev => {
+          const updated = prev.filter(u => u.id !== id);
+          const employerCount  = updated.filter(u => u.role === 'employer').length;
+          const jobSeekerCount = updated.filter(u => u.role === 'job_seeker').length;
+          setStats(s => ({ ...s, totalEmployerUsers: employerCount, totalJobSeekerUsers: jobSeekerCount }));
+          return updated;
+        });
+        triggerNotification('User account deleted successfully.', 'error');
+      } catch {
+        triggerNotification('Failed to delete user account.', 'error');
+      }
     } else if (type === 'job') {
       // Jobs come from real API — just remove from local state optimistically
       setJobs(prev => {

@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
-from .utils import generate_and_store_otp, verify_otp,get_tokens
+from ..utils import generate_and_store_otp, verify_otp,get_tokens
 from allauth.socialaccount.models import SocialAccount,SocialLogin
 from allauth.socialaccount.helpers import complete_social_login
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -16,8 +16,8 @@ from django.shortcuts import redirect as django_redirect
 from urllib.parse import urlencode
 from urllib.parse import urlencode
 
-from .models import User,EmployerProfile,JobSeekerProfile
-from .serializers import (
+from ..models import User,EmployerProfile,JobSeekerProfile
+from ..serializers.serializers import (
     SendOTPSerializer, VerifyOTPSerializer,
     EmployerRegisterSerializer, JobSeekerRegisterSerializer,
     LoginSerializer,JobSeekerProfileSerializer,EmployerProfileSerializer,
