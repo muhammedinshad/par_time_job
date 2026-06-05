@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/common/Sidebar';
 import EmployerNavbar from './EmployerNavbar';
 import axiosInstance from '../../api/axiosInstance';
+import LocationAutocomplete from '../../components/common/LocationAutocomplete';
 
 const CATEGORY_CHOICES = [
   { value: 'restaurant', label: 'Restaurant' },
   { value: 'events', label: 'Events' },
+  { value: 'delivery', label: 'Delivery' },
   { value: 'health_care', label: 'Health Care' },
   { value: 'education', label: 'Education' },
   { value: 'software_development', label: 'Software Development' },
@@ -127,9 +129,9 @@ const PostJob = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className={labelStyles}>Location <span className="text-red-500">*</span></label>
-                <input
+                <LocationAutocomplete
                   name="location"
-                  placeholder="e.g. New York, NY or Remote"
+                  placeholder="e.g. Kozhikode, Kerala"
                   value={formData.location}
                   onChange={handleChange}
                   required

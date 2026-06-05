@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { registerEmployer } from '../../api/authApi';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../store/authSlice';
+import LocationAutocomplete from '../../components/common/LocationAutocomplete';
 
 const EmployerRegister = () => {
   const { state } = useLocation();
@@ -93,9 +94,10 @@ const EmployerRegister = () => {
           required
           readOnly={!!state?.email}
         />
-        <input
+        <LocationAutocomplete
           name="location"
           placeholder="Location"
+          value={formData.location}
           onChange={handleChange}
           required
         />

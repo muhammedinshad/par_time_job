@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchProfile, updateProfile } from '../../api/userApi';
+import LocationAutocomplete from '../../components/common/LocationAutocomplete';
 
 const GENDER_CHOICES = [
   { value: 'male', label: 'Male' },
@@ -178,8 +179,7 @@ const ProfileEdit = () => {
 
           <div>
             <label className="block text-xs font-medium text-[#111827] mb-1.5">Location</label>
-            <input
-              type="text"
+            <LocationAutocomplete
               name="current_location"
               value={formData.current_location}
               onChange={handleChange}

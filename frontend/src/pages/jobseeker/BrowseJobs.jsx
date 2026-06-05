@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchActiveJobs } from '../../api/jobApi';
+import { searchJobs } from '../../api/jobApi';
 
 const CATEGORY_LABELS = {
   restaurant: 'Restaurant & Food',
@@ -24,23 +24,35 @@ const BrowseJobs = () => {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const debounceRef = useRef(null);
 
-  useEffect(() => {
-    fetchActiveJobs()
+  const loadJobs = (q, cat) => {
+    setLoading(true);
+    searchJobs(q, cat || undefined)
       .then((data) => setJobs(Array.isArray(data) ? data : []))
       .catch(() => setError('Failed to load jobs.'))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadJobs('', '');
   }, []);
 
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = search
-      ? job.title?.toLowerCase().includes(search.toLowerCase()) ||
-        job.employer_name?.toLowerCase().includes(search.toLowerCase()) ||
-        job.location?.toLowerCase().includes(search.toLowerCase())
-      : true;
-    const matchesCategory = categoryFilter ? job.category === categoryFilter : true;
-    return matchesSearch && matchesCategory;
-  });
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      loadJobs(value, categoryFilter);
+    }, 400);
+  };
+
+  const handleCategoryChange = (e) => {
+    const value = e.target.value;
+    setCategoryFilter(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    loadJobs(search, value);
+  };
 
   return (
     <div>
@@ -57,14 +69,14 @@ const BrowseJobs = () => {
             type="text"
             placeholder="Search by title, company, or location..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full px-4 py-3 text-[14px] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040]"
           />
         </div>
         <div className="w-full sm:w-48">
           <select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            onChange={handleCategoryChange}
             className="w-full px-4 py-3 text-[14px] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#136040]"
           >
             <option value="">All Categories</option>
@@ -86,13 +98,13 @@ const BrowseJobs = () => {
             Retry
           </button>
         </div>
-      ) : filteredJobs.length === 0 ? (
+      ) : jobs.length === 0 ? (
         <div className="text-center p-12 text-[#9ca3af]">
-          <p>{jobs.length === 0 ? 'No jobs available at the moment.' : 'No jobs match your search criteria.'}</p>
+          <p>No jobs available at the moment.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filteredJobs.map((job) => (
+          {jobs.map((job) => (
             <Link
               key={job.id}
               to={`/jobseeker/dashboard/jobs/${job.id}`}

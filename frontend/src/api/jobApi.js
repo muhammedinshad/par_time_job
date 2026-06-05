@@ -47,6 +47,14 @@ export const updateEmployerJob = async (id, data) => {
   return response.data;
 };
 
+export const searchJobs = async (query, category) => {
+  const params = {};
+  if (query) params.q = query;
+  if (category) params.category = category;
+  const response = await axiosInstance.get('jobs/jobs/search/', { params });
+  return response.data;
+};
+
 export const fetchEmployerProfile = async () => {
   const response = await axiosInstance.get('auth/profile/');
   return response.data;

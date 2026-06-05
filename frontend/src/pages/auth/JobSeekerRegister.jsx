@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { registerJobSeeker } from '../../api/authApi';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../store/authSlice';
+import LocationAutocomplete from '../../components/common/LocationAutocomplete';
 
 const JobSeekerRegister = () => {
   const { state } = useLocation();
@@ -94,9 +95,10 @@ const JobSeekerRegister = () => {
           <option value="female">Female</option>
           <option value="other">Other</option>
         </select>
-        <input 
+        <LocationAutocomplete 
           name="current_location" 
           placeholder="Current Location" 
+          value={formData.current_location}
           onChange={handleChange} 
           required 
         />
