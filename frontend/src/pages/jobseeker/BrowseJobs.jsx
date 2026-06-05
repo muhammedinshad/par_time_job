@@ -8,6 +8,7 @@ const CATEGORY_LABELS = {
   health_care: 'Health & Care',
   education: 'Education & Tutoring',
   delivery: 'Delivery',
+  software_sevelopment:'Software Development',
   other: 'Other',
 };
 

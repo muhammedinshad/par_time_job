@@ -15,6 +15,16 @@ const MyJobs = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleDelete = async (jobId) => {
+    if (!window.confirm('Are you sure you want to delete this job?')) return;
+    try {
+      await axiosInstance.delete(`jobs/${jobId}/`);
+      setJobs((prev) => prev.filter((job) => job.id !== jobId));
+    } catch {
+      alert('Failed to delete job.');
+    }
+  };
+
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -70,12 +80,20 @@ const MyJobs = () => {
                       </td>
                       <td className="p-4 text-sm text-[#6b7280] border-b border-[#e5e7eb]">{formatDate(job.created_at)}</td>
                       <td className="p-4 text-sm border-b border-[#e5e7eb]">
-                        <Link
-                          to={`/employer/my-jobs/${job.id}`}
-                          className="inline-flex items-center px-3 py-1.5 bg-[#136040] text-white text-xs font-medium rounded-lg hover:bg-[#0f4f34] transition-colors no-underline"
-                        >
-                          View
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/employer/my-jobs/${job.id}`}
+                            className="inline-flex items-center px-3 py-1.5 bg-[#136040] text-white text-xs font-medium rounded-lg hover:bg-[#0f4f34] transition-colors no-underline"
+                          >
+                            View
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(job.id)}
+                            className="inline-flex items-center px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-lg hover:bg-red-600 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -19,7 +19,7 @@ CATEGORY_CHOICES = [
     ('health_care', 'Health & Care'),
     ('education',   'Education & Tutoring'),
     ('delivery', 'Delivery'),
-    ('software_development','Software & Development'),
+    ('software_development','Software Development'),
     ('other',       'Other'),
 ]
 

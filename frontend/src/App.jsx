@@ -12,6 +12,7 @@ import JobSeekerRegister from './pages/auth/JobSeekerRegister';
 import EmployerDashboard from './pages/employer/EmployerDashboard';
 import MyJobs from './pages/employer/MyJobs';
 import EmployerJobDetail from './pages/employer/EmployerJobDetail';
+import EmployerJobEdit from './pages/employer/EmployerJobEdit';
 import PostJob from './pages/employer/PostJob';
 import Applicants from './pages/employer/Applicants';
 import ApplicationDetail from './pages/employer/ApplicationDetail';
@@ -48,6 +49,7 @@ function AppContent() {
               <Route path="/employer/dashboard" element={<EmployerDashboard />} />
               <Route path="/employer/my-jobs" element={<MyJobs />} />
               <Route path="/employer/my-jobs/:id" element={<EmployerJobDetail />} />
+              <Route path="/employer/my-jobs/:id/edit" element={<EmployerJobEdit />} />
               <Route path="/employer/post-job" element={<PostJob />} />
               <Route path="/employer/applications" element={<Applicants />} />
               <Route path="/employer/applications/:id" element={<ApplicationDetail />} />
