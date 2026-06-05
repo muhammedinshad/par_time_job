@@ -9,6 +9,7 @@ const CATEGORY_CHOICES = [
   { value: 'events', label: 'Events' },
   { value: 'health_care', label: 'Health Care' },
   { value: 'education', label: 'Education' },
+  { value: 'software_development', label: 'Software Development' },
   { value: 'other', label: 'Other' },
 ];
 

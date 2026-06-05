@@ -23,7 +23,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 class EmployerRegisterSerializer(serializers.Serializer):
     phone_number  = serializers.CharField(max_length=10)
     business_name = serializers.CharField(max_length=200)
-    business_type = serializers.ChoiceField(choices=['restaurant', 'events', 'health_care', 'other'])
+    business_type = serializers.ChoiceField(choices=['restaurant', 'events', 'health_care', 'software_development', 'other'])
     email         = serializers.EmailField()
     location      = serializers.CharField(max_length=200)
     password      = serializers.CharField(min_length=8, write_only=True)

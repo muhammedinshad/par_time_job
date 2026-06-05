@@ -75,6 +75,7 @@ const EmployerRegister = () => {
           <option value="restaurant">Restaurant</option>
           <option value="events">Events</option>
           <option value="health_care">Health Care</option>
+          <option value="health_care">Software Development</option>
           <option value="other">Other</option>
         </select>
         <input

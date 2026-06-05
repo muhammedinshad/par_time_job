@@ -55,6 +55,7 @@ BUSINESS_TYPE_CHOICES = [
     ('restaurant',  'Restaurant'),
     ('events',      'Events'),
     ('health_care', 'Health Care'),
+    ('software_development', 'Software Development'),
     ('other',       'Other'),
 ]
 
