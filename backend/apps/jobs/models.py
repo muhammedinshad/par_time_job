@@ -1,5 +1,8 @@
+from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import Point
 from django.db import models
 from apps.users.models import EmployerProfile
+from ..common.geocoding import geocode_location 
 
 # Create your models here.
 
@@ -27,11 +30,20 @@ class Job(models.Model):
     category     = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
     salary_range = models.CharField(max_length=100, blank=True, default='')
     job_type     = models.CharField(max_length=10, choices=JOB_TYPE_CHOICES)
-    location     = models.CharField(max_length=200)         
+    location     = models.CharField(max_length=200)   
+    coordinates  = gis_models.PointField(srid=4326, null=True, blank=True)       
     timing       = models.CharField(max_length=200)
     slots        = models.PositiveIntegerField(blank=True, null=True)  
     is_active    = models.BooleanField(default=True)
     created_at   = models.DateTimeField(auto_now_add=True)
+    
+    def save(self, *args, **kwargs):
+        # auto convert the text "Kozhikode" → lat/lng 
+        if self.location and not self.coordinates:
+            lat, lng = geocode_location(self.location)
+            if lat and lng:
+                self.coordinates = Point(lng, lat, srid=4326)
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.title} — {self.employer.business_name}"

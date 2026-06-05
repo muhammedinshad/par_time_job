@@ -4,6 +4,9 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 
+from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import Point
+
 # Create your models here.
 
 class UserManager(BaseUserManager):
@@ -62,6 +65,8 @@ GENDER_CHOICES = [
 ]
 
 
+
+
 class EmployerProfile(models.Model):
     user          = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employer_profile')
     business_name = models.CharField(max_length=200)
@@ -81,6 +86,7 @@ class JobSeekerProfile(models.Model):
     date_of_birth    = models.DateField()
     gender           = models.CharField(max_length=20, choices=GENDER_CHOICES)
     current_location = models.CharField(max_length=200)
+    coordinates      = gis_models.PointField(srid=4326, null=True, blank=True)
     created_at       = models.DateTimeField(auto_now_add=True)
     phone_number = models.CharField(max_length=10, unique=True)
     cv = models.FileField(

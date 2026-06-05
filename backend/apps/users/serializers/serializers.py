@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from ..models import User, EmployerProfile, JobSeekerProfile
+from ...common.geocoding import geocode_location
+from django.contrib.gis.geos import Point
 
 class SendOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -47,6 +49,7 @@ class EmployerRegisterSerializer(serializers.Serializer):
             role         = 'employer',
             is_verified  = True,
         )
+        
         EmployerProfile.objects.create(
             user          = user,
             business_name = business_name,
@@ -90,6 +93,12 @@ class JobSeekerRegisterSerializer(serializers.Serializer):
             role         = 'job_seeker',
             is_verified  = True,
         )
+        
+        coordinates = None
+        lat, lng = geocode_location(current_location)
+        if lat and lng:
+            coordinates = Point(float(lng), float(lat), srid=4326)
+            
         JobSeekerProfile.objects.create(
             user             = user,
             full_name        = full_name,
@@ -97,6 +106,7 @@ class JobSeekerRegisterSerializer(serializers.Serializer):
             gender           = gender,
             current_location = current_location,
             phone_number     = phone,
+            coordinates      = coordinates,
         )
         return user
     
@@ -111,6 +121,12 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=data['email'], password=data['password'])
         if not user:
             raise serializers.ValidationError('incorrect email or Password ')
+        
+        if not user.is_active:
+            raise serializers.ValidationError(
+                'Your account has been blocked.'
+            )
+            
         data['user'] = user
         return data
 
@@ -223,6 +239,15 @@ class JobSeekerProfileUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('CV must be under 5MB.')
         return value
     
+    def update(self, instance, validated_data):
+        # when the current_location update then add auto geocode
+        location_text = validated_data.get('current_location')
+        if location_text:
+            lat, lng = geocode_location(location_text)
+            if lat and lng:
+                instance.coordinates = Point(float(lng), float(lat), srid=4326)
+
+        return super().update(instance, validated_data)
 
 # ---- Google Auth Serializers ----
 
